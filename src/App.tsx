@@ -6,6 +6,12 @@ import Home from "./pages/Home";
 import Debugger from "./pages/Debugger.tsx";
 import Login from "./pages/Login";
 import RoleSelect from "./pages/RoleSelect";
+import ArtisanDashboard from "./pages/ArtisanDashboard";
+import Scan from "./pages/Scan";
+import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AppLayout: React.FC = () => (
   <main>
@@ -57,18 +63,37 @@ const AppLayout: React.FC = () => (
 
 function App() {
   return (
-    <Routes>
-      {/* Auth routes without layout */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/role-select" element={<RoleSelect />} />
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      <Routes>
+        {/* Auth routes without layout */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/role-select" element={<RoleSelect />} />
 
-      {/* Regular app routes with layout */}
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/debug" element={<Debugger />} />
-        <Route path="/debug/:contractName" element={<Debugger />} />
-      </Route>
-    </Routes>
+        {/* Hackathon routes without layout */}
+        <Route path="/artisan-dashboard" element={<ArtisanDashboard />} />
+        <Route path="/scan" element={<Scan />} />
+        <Route path="/pay/:orderId" element={<Payment />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+
+        {/* Regular app routes with layout */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/debug" element={<Debugger />} />
+          <Route path="/debug/:contractName" element={<Debugger />} />
+        </Route>
+      </Routes>
+    </>
   );
 }
 
