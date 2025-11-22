@@ -12,9 +12,6 @@ default = true # Optional. Whether to use this account as the `--source` for com
 fungible_allowlist_example = { client = true, constructor_args = "--admin me --manager me --initial_supply 1000000000000000000000000" }
 nft_enumerable_example = { client = true, constructor_args = "--owner me" }
 
-[staging.contracts]
-artisan_registry = { client = true }
-
 # Rather than in one list, TOML allows specifying contracts in their own "sections"
 [development.contracts.guess_the_number]
 # Generate a contract client (NPM package) for this contract. This means:
@@ -79,6 +76,7 @@ name = "admin"  # Cambia "testnet-user" por "admin"
 default = true
 
 [staging.contracts]
+artisan_registry = { client = true }
 # soroban-atomic-swap-contract = { id = "C123..." }
 # soroban-auth-contract = { id = "C234..." }
 # soroban-errors-contract = { id = "C345..." }

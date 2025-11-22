@@ -4,6 +4,8 @@ import ConnectAccount from "./components/ConnectAccount.tsx";
 import { Routes, Route, Outlet, NavLink } from "react-router-dom";
 import Home from "./pages/Home";
 import Debugger from "./pages/Debugger.tsx";
+import Login from "./pages/Login";
+import RoleSelect from "./pages/RoleSelect";
 
 const AppLayout: React.FC = () => (
   <main>
@@ -56,6 +58,11 @@ const AppLayout: React.FC = () => (
 function App() {
   return (
     <Routes>
+      {/* Auth routes without layout */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/role-select" element={<RoleSelect />} />
+
+      {/* Regular app routes with layout */}
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/debug" element={<Debugger />} />
