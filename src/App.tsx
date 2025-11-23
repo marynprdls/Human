@@ -4,6 +4,19 @@ import ConnectAccount from "./components/ConnectAccount.tsx";
 import { Routes, Route, Outlet, NavLink } from "react-router-dom";
 import Home from "./pages/Home";
 import Debugger from "./pages/Debugger.tsx";
+import Login from "./pages/Login";
+import RoleSelect from "./pages/RoleSelect";
+import ArtisanRegister from "./pages/ArtisanRegister";
+import ClientRegister from "./pages/ClientRegister";
+import ArtisanDashboard from "./pages/ArtisanDashboard";
+import ClientDashboard from "./pages/ClientDashboard";
+import Scan from "./pages/Scan";
+import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import AdminPanel from "./pages/AdminPanel";
+import Map from "./pages/Map";
+import Profile from "./pages/Profile";
+import { Toaster } from 'sonner';
 
 const AppLayout: React.FC = () => (
   <main>
@@ -55,13 +68,33 @@ const AppLayout: React.FC = () => (
 
 function App() {
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/debug" element={<Debugger />} />
-        <Route path="/debug/:contractName" element={<Debugger />} />
-      </Route>
-    </Routes>
+    <>
+      <Toaster position="top-right" richColors />
+      <Routes>
+        {/* Auth routes without layout */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/role-select" element={<RoleSelect />} />
+        <Route path="/register/artisan" element={<ArtisanRegister />} />
+        <Route path="/register/client" element={<ClientRegister />} />
+
+        {/* Hackathon routes without layout */}
+        <Route path="/artisan-dashboard" element={<ArtisanDashboard />} />
+        <Route path="/client-dashboard" element={<ClientDashboard />} />
+        <Route path="/scan" element={<Scan />} />
+        <Route path="/pay/:orderId" element={<Payment />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/map" element={<Map />} />
+        <Route path="/profile" element={<Profile />} />
+
+        {/* Regular app routes with layout */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/debug" element={<Debugger />} />
+          <Route path="/debug/:contractName" element={<Debugger />} />
+        </Route>
+      </Routes>
+    </>
   );
 }
 

@@ -80,10 +80,13 @@ impl ArtisanRegistry {
     }
     
     pub fn increment_payments(env: Env, artisan_address: Address) {
+        artisan_address.require_auth();
+
         let mut artisan: Artisan = env.storage().persistent()
             .get(&artisan_address).expect("Artisan not found");
         artisan.total_payments += 1;
         env.storage().persistent().set(&artisan_address, &artisan);
+        env.events().publish((symbol_short!("payment"),), artisan_address);
     }
     
     pub fn get_admin(env: Env) -> Address {

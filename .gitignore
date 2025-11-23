@@ -74,4 +74,5 @@ Thumbs.db
 npm-debug.log*
 
 # Test snapshots
-test_snapshots/
+test_snapshots/nul
+backend/nul

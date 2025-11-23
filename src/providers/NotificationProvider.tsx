@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import { Notification as StellarNotification } from "@stellar/design-system";
-import "./NotificationProvider.css"; // Import CSS for sliding effect
 
 type NotificationType =
   | "primary"
