@@ -19,7 +19,7 @@ export class GoogleAuthProvider {
     console.log('🔧 Loading Google Identity Services script...');
     await this.loadGoogleIdentityServices();
     this.initialized = true;
-    console.log('✅ Google Identity Services script loaded');
+    console.log('[ok] Google Identity Services script loaded');
   }
 
   private loadGoogleIdentityServices(): Promise<void> {
@@ -58,10 +58,10 @@ export class GoogleAuthProvider {
         }
       };
 
-      console.log('✅ Google authentication successful:', userInfo.email);
+      console.log('[ok] Google authentication successful:', userInfo.email);
       return authMethod;
     } catch (error: any) {
-      console.error('❌ Google authentication failed:', error);
+      console.error('[F] Google authentication failed:', error);
       throw error;
     }
   }

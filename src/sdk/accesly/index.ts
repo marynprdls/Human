@@ -31,7 +31,7 @@ export class StellarSocialSDK {
     if (this.googleProvider) {
       await this.googleProvider.initialize();
     }
-    console.log('✅ SDK initialized');
+    console.log('[ok] SDK initialized');
   }
 
   async authenticateWithGoogleCredential(credentialResponse: any): Promise<AuthResult> {
@@ -57,13 +57,13 @@ export class StellarSocialSDK {
 
       const account = await this.getOrCreateAccountWithKeypair(keypair, authMethod);
 
-      console.log('✅ Real Google authentication successful');
+      console.log('[ok] Real Google authentication successful');
       return {
         success: true,
         account
       };
     } catch (error: any) {
-      console.error('❌ Google authentication failed:', error.message);
+      console.error('[F] Google authentication failed:', error.message);
       return {
         success: false,
         error: error.message || 'Google authentication failed'
@@ -142,7 +142,7 @@ export class StellarSocialSDK {
       if (!response.ok) {
         throw new Error('Friendbot funding failed');
       }
-      console.log('✅ Account funded with testnet XLM');
+      console.log('[ok] Account funded with testnet XLM');
     } catch (error: any) {
       console.warn('⚠️ Friendbot funding failed:', error.message);
     }

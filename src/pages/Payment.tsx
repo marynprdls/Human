@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSocialAuth } from '../providers/SocialAuthProvider';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Asset } from '@stellar/stellar-sdk';
+import { logger } from '../utils/logger';
 
 interface OrderDetails {
   order_id: string;
@@ -51,7 +52,7 @@ export default function Payment() {
       setOrder(data);
       setError(null);
     } catch (err: any) {
-      console.error('Error loading order:', err);
+      logger.error('Error loading order:', err);
       setError(err.message || 'Error al cargar la orden');
       toast.error('No se pudo cargar la orden');
     } finally {
@@ -62,20 +63,26 @@ export default function Payment() {
   const handlePayment = async () => {
     if (!account || !order) return;
 
+    logger.log('💳 [PAYMENT] Iniciando proceso de pago...');
+    logger.log('💳 [PAYMENT] Order ID:', orderId);
+    logger.log('💳 [PAYMENT] Order details:', order);
+
     // Check if order is expired
     if (order.status === 'expired') {
+      logger.error('❌ [PAYMENT] Orden expirada');
       toast.error('Esta orden ha expirado');
       return;
     }
 
     if (order.status === 'paid') {
+      logger.error('❌ [PAYMENT] Orden ya pagada');
       toast.error('Esta orden ya fue pagada');
       return;
     }
 
     setPaying(true);
     try {
-      console.log('Procesando pago...');
+      logger.log('⚙️ [PAYMENT] Preparando asset...');
 
       // Prepare asset (XLM or USDC)
       let asset = Asset.native(); // XLM
@@ -85,19 +92,37 @@ export default function Payment() {
           throw new Error('USDC issuer not configured');
         }
         asset = new Asset('USDC', usdcIssuer);
+        logger.log('💎 [PAYMENT] Using USDC asset');
+      } else {
+        logger.log('⭐ [PAYMENT] Using native XLM');
       }
 
       // Send payment using Accesly account
+      // Convert amount to proper Stellar format (must be string with up to 7 decimals)
+      const amount = parseFloat(order.amount_xlm).toFixed(7);
+
+      logger.log('💸 [PAYMENT] Enviando pago a Stellar blockchain...');
+      logger.log('💸 [PAYMENT] Detalles del pago:', {
+        from: account.publicKey,
+        to: order.artisan_address,
+        amount: amount,
+        currency: order.currency,
+        memo: order.order_id.substring(0, 28)
+      });
+
       const txHash = await account.sendPayment(
         order.artisan_address,
-        order.amount_xlm,
+        amount,
         asset,
         order.order_id.substring(0, 28) // Memo (max 28 chars)
       );
 
-      console.log('Payment sent! TX Hash:', txHash);
+      logger.log('✅ [PAYMENT] ¡Pago enviado exitosamente a Stellar!');
+      logger.log('🔗 [PAYMENT] Transaction Hash:', txHash);
+      logger.log('🌐 [PAYMENT] Ver en Stellar Expert:', `https://stellar.expert/explorer/testnet/tx/${txHash}`);
 
       // Confirm payment with backend
+      logger.log('📡 [PAYMENT] Confirmando pago con el backend...');
       const confirmResponse = await fetch(
         `${import.meta.env.PUBLIC_API_URL}/api/orders/${orderId}/pay`,
         {
@@ -111,16 +136,28 @@ export default function Payment() {
       );
 
       if (!confirmResponse.ok) {
+        logger.error('❌ [PAYMENT] Error al confirmar con backend');
         throw new Error('Error al confirmar el pago');
       }
 
+      const confirmData = await confirmResponse.json();
+      logger.log('✅ [PAYMENT] Pago confirmado por el backend:', confirmData);
+
+      // Note: Payment counter is now incremented manually by artisan
+      // from their dashboard after confirming they received payment
+      logger.log('✅ [PAYMENT] Pago registrado. Artesano debe confirmar desde su dashboard.');
+
+      logger.log('🎉 [PAYMENT] ¡Proceso de pago completado exitosamente!');
       toast.success('¡Pago realizado exitosamente!');
       navigate('/payment-success', { state: { txHash, order } });
     } catch (err: any) {
-      console.error('Payment error:', err);
+      logger.error('❌ [PAYMENT] Error durante el pago:', err);
+      logger.error('❌ [PAYMENT] Error message:', err.message);
+      logger.error('❌ [PAYMENT] Error stack:', err.stack);
       toast.error('Error al procesar el pago: ' + err.message);
     } finally {
       setPaying(false);
+      logger.log('🏁 [PAYMENT] Proceso de pago finalizado');
     }
   };
 
@@ -136,7 +173,7 @@ export default function Payment() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-500 to-cyan-400 p-4 flex items-center justify-center">
         <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">❌</div>
+          <div className="text-6xl mb-4">[F]</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Error</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
@@ -179,6 +216,14 @@ export default function Payment() {
                   {order.artisan_address.substring(0, 8)}...
                   {order.artisan_address.substring(order.artisan_address.length - 4)}
                 </p>
+                <a
+                  href={`https://stellar.expert/explorer/testnet/account/${order.artisan_address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-500 hover:text-blue-600"
+                >
+                  Ver cuenta →
+                </a>
               </div>
 
               <div>

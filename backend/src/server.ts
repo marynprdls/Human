@@ -8,7 +8,7 @@ import { createApp } from './app';
 import { testConnection as testSupabase } from './config/supabase';
 import { testConnection as testStellar } from './config/stellar';
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {

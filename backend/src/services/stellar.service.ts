@@ -166,11 +166,11 @@ async verifyPaymentXLM(
       };
     }
     
-    console.log('✅ XLM payment verified successfully');
+    console.log('[ok] XLM payment verified successfully');
     return { valid: true, payment: paymentOp };
     
   } catch (error: any) {
-    console.error('❌ Error verifying XLM payment:', error);
+    console.error('[F] Error verifying XLM payment:', error);
     return { 
       valid: false, 
       reason: `Error fetching transaction: ${error.message}` 
@@ -213,6 +213,71 @@ async isAccountFunded(publicKey: string): Promise<boolean> {
     return balance >= 1; // Mínimo 1 XLM para estar activa
   } catch (error) {
     return false;
+  }
+}
+
+/**
+ * Obtener historial de transacciones de una cuenta
+ * Devuelve las últimas N transacciones (payments y path payments)
+ */
+async getTransactionHistory(publicKey: string, limit: number = 20): Promise<any[]> {
+  try {
+    console.log(`📜 Fetching transaction history for ${publicKey} (limit: ${limit})`);
+
+    // Obtener operaciones de pago de la cuenta
+    const paymentsResponse = await server
+      .payments()
+      .forAccount(publicKey)
+      .order('desc')
+      .limit(limit)
+      .call();
+
+    const transactions = await Promise.all(
+      paymentsResponse.records
+        .filter((payment: any) => {
+          // Filter out non-payment operations (like create_account, etc)
+          return payment.type === 'payment' || payment.type === 'create_account';
+        })
+        .map(async (payment: any) => {
+          let txDetails = null;
+
+          // Obtener detalles de la transacción
+          try {
+            const tx = await server.transactions()
+              .transaction(payment.transaction_hash)
+              .call();
+            txDetails = tx;
+          } catch (e) {
+            console.error('Error fetching tx details:', e);
+          }
+
+          // Determinar tipo de transacción (enviado o recibido)
+          const isReceived = payment.to === publicKey || payment.account === publicKey;
+
+          return {
+            id: payment.id,
+            type: isReceived ? 'received' : 'sent',
+            hash: payment.transaction_hash,
+            created_at: payment.created_at,
+            from: payment.from || payment.funder || '',
+            to: payment.to || payment.account || '',
+            amount: payment.amount ? parseFloat(payment.amount) : (payment.starting_balance ? parseFloat(payment.starting_balance) : 0),
+            asset_type: payment.asset_type || 'native',
+            asset_code: payment.asset_code || 'XLM',
+            asset_issuer: payment.asset_issuer || '',
+            memo: txDetails?.memo || '',
+            memo_type: txDetails?.memo_type || '',
+            successful: txDetails?.successful !== false
+          };
+        })
+    );
+
+    console.log(`[ok] Found ${transactions.length} transactions`);
+    return transactions;
+
+  } catch (error) {
+    console.error('[F] Error getting transaction history:', error);
+    return [];
   }
 }
 }

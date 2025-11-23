@@ -81,7 +81,7 @@ export class StellarSocialAccount {
 
   async addAuthMethod(newMethod: AuthMethod): Promise<boolean> {
     this.data.authMethods.push(newMethod);
-    console.log(`✅ Added auth method: ${newMethod.type}`);
+    console.log(`[ok] Added auth method: ${newMethod.type}`);
     return true;
   }
 
@@ -106,11 +106,32 @@ export class StellarSocialAccount {
 
     try {
       console.log('🔧 Initializing account with social contract...');
-      console.log(`✅ Account initialized: ${this.publicKey}`);
+      console.log(`[ok] Account initialized: ${this.publicKey}`);
       return true;
     } catch (error: any) {
       console.error('Contract initialization failed:', error.message);
       return false;
+    }
+  }
+
+  /**
+   * Firmar una transacción XDR genérica
+   * Usado para contratos inteligentes y operaciones personalizadas
+   */
+  async signTransaction(xdr: string): Promise<string> {
+    if (!this.keypair) {
+      throw new Error('No keypair available for signing. User must be authenticated.');
+    }
+
+    try {
+      const networkPassphrase = this.network === 'testnet' ? Networks.TESTNET : Networks.PUBLIC;
+      const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase);
+
+      transaction.sign(this.keypair);
+
+      return transaction.toXDR();
+    } catch (error: any) {
+      throw new Error(`Failed to sign transaction: ${error.message}`);
     }
   }
 }

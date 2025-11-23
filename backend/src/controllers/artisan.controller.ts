@@ -215,6 +215,79 @@ export class ArtisanController {
       res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  /**
+   * GET /api/artisans/verified
+   * Obtener artesanos verificados con al menos 1 pago
+   */
+  async getVerifiedArtisans(req: Request, res: Response): Promise<void> {
+    try {
+      console.log('📍 [API] Fetching verified artisans with location...');
+
+      // Get all registered users with artisan role from Supabase
+      const { data: registeredArtisans, error: registeredError } = await supabase
+        .from('users')
+        .select('stellar_address, name, role, latitude, longitude, location_name, business_name, business_description')
+        .eq('role', 'artisan');
+
+      if (registeredError) {
+        console.error('Database error:', registeredError);
+        res.status(500).json({ error: 'Failed to fetch artisans' });
+        return;
+      }
+
+      console.log(`✅ [API] Found ${registeredArtisans?.length || 0} registered artisans`);
+
+      // Get payment orders to count verified payments per artisan
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('artisan_address, status')
+        .eq('status', 'completed');
+
+      if (ordersError) {
+        console.error('Orders error:', ordersError);
+      }
+
+      console.log(`💳 [API] Found ${orders?.length || 0} completed orders`);
+
+      // Count payments per artisan
+      const paymentCounts: { [key: string]: number } = {};
+      orders?.forEach(order => {
+        paymentCounts[order.artisan_address] = (paymentCounts[order.artisan_address] || 0) + 1;
+      });
+
+      // Filter artisans with at least 1 verified payment and location data
+      const verifiedArtisans = registeredArtisans
+        ?.filter(artisan => {
+          const hasPayments = (paymentCounts[artisan.stellar_address] || 0) > 0;
+          const hasLocation = artisan.latitude && artisan.longitude;
+          return hasPayments && hasLocation;
+        })
+        .map(artisan => ({
+          address: artisan.stellar_address,
+          name: artisan.name,
+          business_name: artisan.business_name || '',
+          description: artisan.business_description || '',
+          total_payments: paymentCounts[artisan.stellar_address] || 0,
+          location: {
+            latitude: artisan.latitude,
+            longitude: artisan.longitude,
+            name: artisan.location_name || ''
+          }
+        })) || [];
+
+      console.log(`🎯 [API] Returning ${verifiedArtisans.length} verified artisans with location`);
+
+      res.json({
+        count: verifiedArtisans.length,
+        artisans: verifiedArtisans
+      });
+
+    } catch (error) {
+      console.error('Error fetching verified artisans:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 }
 
 export default new ArtisanController();
