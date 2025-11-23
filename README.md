@@ -1,4 +1,4 @@
-# Human - P2P Scholarship Platform on Stellar Blockchain
+# Human - P2P  Platform on Stellar Blockchain
 
 <div align="center">
 
